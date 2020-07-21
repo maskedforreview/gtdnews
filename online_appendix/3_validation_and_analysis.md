@@ -51,25 +51,28 @@ use events where the `.complete_window` column in `g$from_meta` is TRUE.
 
 ### figure 2
 
-To produce figure 2, we plot histograms of the `hourdiff` column in the
+To produce figure 2, we plot barcharts of the `hourdiff` column in the
 edgelist, which gives the time difference between the event and news
 article in hours. We divide this by 24 to get the difference in days.
-Three plots side by side (`mfrow = c(1,3)`) are presented, that show
-this histogram for the similarity thresholds 2, 7 and 14. There is no
-particular reason for these threshold, other than that it nicely shows
-high recall (left), high precision (right), and a more balanced
-thresholds with presumably high F1 (mid).
+Three plots side by side (`mfrow = c(1,3)`) are presented, for the
+similarity thresholds 2, 7 and 14. There is no particular reason for
+these threshold, other than that it nicely shows high recall (left),
+high precision (right), and a more balanced thresholds with presumably
+high F1 (mid).
 
 ``` r
-par(mar=c(4.5,4,1,4), mfrow=c(1,3))  ## plot side by side
-for (thres in c(2,7,14)) 
-  x=hist(g$d$hourdiff[g$d$weight > thres] / 24, right = F, main='', xlab='Day difference')
-```
+g$d$daydiff = floor(g$d$hourdiff / 24)
 
-For reference, the `right = FALSE` parameter means that histogram cells
-are left-closed. This is required so that all results for a day
-difference of zero or higher are in the bar on the right of the zero
-point the x-axis.
+par(mar=c(4.5,4,1,4), mfrow=c(1,3))  ## plot side by side
+for (thres in c(2,7,14)) {
+  agg = g$d[,list(n = sum(weight > thres)), by='daydiff']
+  setorderv(agg, 'daydiff')
+  barplot(agg$n, names.arg = agg$daydiff, cex.names = 0.8, 
+          xlab= ifelse(thres==7, 'Day difference', ''),
+          ylab= ifelse(thres==2, 'Number of matches', ''),
+          col = ifelse(agg$daydiff >= 0, 'black','white'))
+}
+```
 
 ### figure 3
 
@@ -205,16 +208,16 @@ geo = e[,list(sum_news=sum(N_news),     ## total number of news articles
               by='region']
 ```
 
-### Figure 6 and 7
+### Figure 6
 
 The `plot_worldmap` function wraps the code (mainly using ggplot2) for
 visualizing the worldmap. The input is the region name and a numeric
-score for that region. THe difference between figure 6 and 7 is only
-whether the sum or mean of news articles per region is used.
+score for that
+region.
 
 ``` r
-plot_worldmap(geo$region, geo$sum_news)   ## figure 6
-plot_worldmap(geo$region, geo$mean_news)  ## figure 7
+plot_worldmap(geo$region, geo$sum_news)   ## most coverage in total. not reported in paper
+plot_worldmap(geo$region, geo$mean_news)  ## most coverage per event. figure 6
 ```
 
 ## Multilevel regression analysis
@@ -283,9 +286,9 @@ anova(m1,m2,m3)
 tab_model(m2,m3, show.se=T)
 ```
 
-### figure 8
+### figure 7
 
-To create figure 8, we first loop over different weight thresholds, fit
+To create figure 7, we first loop over different weight thresholds, fit
 the full model for this threshold, and store the coefficients for each
 model.
 
@@ -325,9 +328,9 @@ library(facetscales)
 d$term = as.character(d$term)
 d$term[d$term == 'log(killed)'] = 'fatal victims'
 d$term[d$term == 'suicide'] = 'suicide'
-d$term[d$term == 'scale(geo_dist)'] = 'geographical dist.'
-d$term[d$term == 'value_dist'] = 'cultural values dist.'
-d$term[d$term == 'UN_disagree'] = 'UN voting diff.'
+d$term[d$term == 'scale(geo_dist)'] = 'geo dist'
+d$term[d$term == 'value_dist'] = 'cultural val dist'
+d$term[d$term == 'UN_disagree'] = 'UN voting diff'
 
 ## make factor, so that ggplot puts the results in the right order
 cnames = unique(d$term)
@@ -337,17 +340,17 @@ d$term = factor(as.character(d$term), levels=cnames)
 scales_y <- list(
   `fatal victims` = scale_y_continuous(limits = c(0,3)),
   `suicide` = scale_y_continuous(limits = c(0, 30)),
-  `geographical dist.` = scale_y_continuous(limits = c(0,2)),
-  `cultural values dist.` = scale_y_continuous(limits = c(0,2)),
-  `UN voting diff.` = scale_y_continuous(limits = c(0,2))
+  `geo dist` = scale_y_continuous(limits = c(0,2)),
+  `cultural val dist` = scale_y_continuous(limits = c(0,2)),
+  `UN voting diff` = scale_y_continuous(limits = c(0,2))
 )
 
 ggplot(data = d, aes(threshold, estimate)) +
-  geom_line(color = "steelblue", size = 1) +
-  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), colour="black", width=.1, ) +
-  geom_point(color="steelblue") + 
+  geom_line(color = "black", size = 1) +
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), colour="black", width=.4, ) +
+  geom_point(color="black") + 
   theme(plot.margin = unit(c(-1,0.4,0.4,0.4), "cm")) +
-  geom_hline(yintercept=1, color='red', linetype=2) +
+  geom_hline(yintercept=1, color='black', linetype=2) +
   labs(title = "", subtitle = "",
        y = "odds ratio", x = "similarity threshold") + 
   facet_grid_sc(term~., scales = list(y = scales_y))
