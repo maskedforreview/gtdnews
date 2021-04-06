@@ -130,7 +130,6 @@ standard. The `weight_range` and `steps` arguments work in the same way
 as in the `estimate_validity` function.
 
 ``` r
-#pdf('gold_pr.pdf', height=4)
 gold_pr = gtd_pr(g, weight_range = c(1,20), steps = 200)
 ```
 
@@ -149,6 +148,14 @@ mean(precision_check$correct)  ## precision for threshold 6.54
 mean(precision_check$correct[precision_check$weight > 10])  ## precision for higher threshold
 ```
 
+This data also contains URLs linking to the GTD event description and
+Guardian article, and comments from the coder for more ambiguous
+references to clarify why the match is correct or incorrect.
+
+``` r
+View(precision_check)
+```
+
 ## Comparison of validation methods
 
 Here we compare the est\_pr and gold\_pr results. Note that this only
@@ -160,7 +167,6 @@ generated this data are identical.
 Plot the F1 scores
 
 ``` r
-#pdf('val_comp.pdf', height=4)
 par(mfrow=c(1,1), mar=c(4,4,1,0), xpd=F)
 plot(est_pr$threshold, est_pr$F1, type='l', 
      ylim = c(min(est_pr$F1, gold_pr$F1m), max(est_pr$F1, gold_pr$F1m)+10), 
@@ -183,7 +189,6 @@ graphics::text(x=top_est+1.85, y=19, labels=top_est,
 
 legend('topright', bty='n', legend = c('estimation', 'gold standard'), 
        lty=c(1,1), lwd=c(2,1), col=c('grey', 'black'))
-#dev.off()
 ```
 
 # Analysis
@@ -246,9 +251,7 @@ score for that region.
 
 ``` r
 plot_worldmap(geo$region, geo$sum_news)   ## most coverage in total. not reported in paper
-pdf('worldmap2.pdf', height = 5, width=10, pointsize = 12)
 plot_worldmap(geo$region, geo$mean_news)  ## most coverage per event. figure 6
-dev.off()
 ```
 
 ## Multilevel regression analysis
