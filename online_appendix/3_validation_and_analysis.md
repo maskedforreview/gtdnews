@@ -3,7 +3,8 @@ Third part of online appendix: Validation and Analysis
 
   - [Load data](#load-data)
   - [Validation](#validation)
-      - [Unsupervised validation](#unsupervised-validation)
+      - [similarity threshold
+        estimation](#similarity-threshold-estimation)
       - [Gold standard validation](#gold-standard-validation)
       - [Comparison of validation
         methods](#comparison-of-validation-methods)
@@ -23,8 +24,8 @@ library(gtdnews)
 library(data.table)
 
 file_url = 'https://github.com/maskedforreview/gtdnews/raw/master/GTD_matching/sim_data.rds'
-download.file(file_url, 'sim_data.rds')
-g = readRDS('sim_data.rds')
+download.file(file_url, 'GTD_matching/sim_data.rds')
+g = readRDS('GTD_matching/sim_data.rds')
 ```
 
 The object `g` is a list with 3 data.frames (in data.table format), that
@@ -43,7 +44,7 @@ The edgelist has already been filtered to only have event-article paris
 where the similarity (weight) was at least 1. Otherwise, the data would
 have been much larger, and we don’t use this information. However, note
 that for the unsupervised validation method we do need to know the total
-number of news article to which each event has been compared, seperately
+number of news article to which each event has been compared, separately
 for articles published before the event (\(N_{before}\)) and after the
 event (\(N_{after}\)). These numbers can be obtained from the
 `from_meta` data, which has the column `from_n` (how many comparisons in
@@ -58,7 +59,7 @@ use events where the `.complete_window` column in `g$from_meta` is TRUE.
 
 # Validation
 
-## Unsupervised validation
+## similarity threshold estimation
 
 ### figure 2
 
@@ -129,8 +130,23 @@ standard. The `weight_range` and `steps` arguments work in the same way
 as in the `estimate_validity` function.
 
 ``` r
-gold_pr = gtd_pr(g, weight_range = c(1,20), steps = 200, exclude_added = T)
-max(gold_pr$F1m)
+#pdf('gold_pr.pdf', height=4)
+gold_pr = gtd_pr(g, weight_range = c(1,20), steps = 200)
+```
+
+### precision validation
+
+For additional validation of the precision, we manually coded 100
+event-article pairs that accoring to the algorithm, and the estimated
+threshold of 6.54, are considered a match.
+
+``` r
+?precision_check
+```
+
+``` r
+mean(precision_check$correct)  ## precision for threshold 6.54
+mean(precision_check$correct[precision_check$weight > 10])  ## precision for higher threshold
 ```
 
 ## Comparison of validation methods
@@ -144,6 +160,7 @@ generated this data are identical.
 Plot the F1 scores
 
 ``` r
+#pdf('val_comp.pdf', height=4)
 par(mfrow=c(1,1), mar=c(4,4,1,0), xpd=F)
 plot(est_pr$threshold, est_pr$F1, type='l', 
      ylim = c(min(est_pr$F1, gold_pr$F1m), max(est_pr$F1, gold_pr$F1m)+10), 
@@ -164,8 +181,9 @@ graphics::text(x=top_gold-0.4, y=19, labels=top_gold,
 graphics::text(x=top_est+1.85, y=19, labels=top_est, 
                srt=0, adj=1, font=3, cex=1, family='monospace')
 
-legend('topright', bty='n', legend = c('weak supervision', 'gold standard'), 
+legend('topright', bty='n', legend = c('estimation', 'gold standard'), 
        lty=c(1,1), lwd=c(2,1), col=c('grey', 'black'))
+#dev.off()
 ```
 
 # Analysis
@@ -228,7 +246,9 @@ score for that region.
 
 ``` r
 plot_worldmap(geo$region, geo$sum_news)   ## most coverage in total. not reported in paper
+pdf('worldmap2.pdf', height = 5, width=10, pointsize = 12)
 plot_worldmap(geo$region, geo$mean_news)  ## most coverage per event. figure 6
+dev.off()
 ```
 
 ## Multilevel regression analysis

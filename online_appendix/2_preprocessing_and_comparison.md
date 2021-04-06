@@ -1,15 +1,23 @@
 Second part of online appendix: Preprocessing and Comparison
 ================
 
+  - [Note to reviewers](#note-to-reviewers)
+  - [Matching the GTD events to the news
+    articles](#matching-the-gtd-events-to-the-news-articles)
+  - [Additional preprocessing for better
+    matching](#additional-preprocessing-for-better-matching)
+      - [Cluster terms with similar
+        spelling](#cluster-terms-with-similar-spelling)
+      - [Compute term combinations](#compute-term-combinations)
+  - [Performing the comparison](#performing-the-comparison)
+
 # Note to reviewers
 
-This part of the online appendix cannot be anonymized because it
-requires the development version of an R package (of which the release
-version is already on CRAN).
+This part of the online appendix cannot be anonymized because the
+required R package is already on CRAN.
 
 ``` r
-library(remotes)
-remotes::install_github('package masked for review')
+install.packages('package masked for review')
 ```
 
 # Matching the GTD events to the news articles
