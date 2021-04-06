@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 
+GTD_matching/gtd*
+GTD_matching/gua*
+GTD_matching/sim_data_*

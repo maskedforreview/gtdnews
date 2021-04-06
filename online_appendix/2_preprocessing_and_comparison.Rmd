@@ -18,11 +18,10 @@ knitr::opts_chunk$set(eval=F)
 
 # Note to reviewers
 
-This part of the online appendix cannot be anonymized because it requires the development version of an R package (of which the release version is already on CRAN). 
+This part of the online appendix cannot be anonymized because the required R package is already on CRAN.
 
 ```{r}
-library(remotes)
-remotes::install_github('package masked for review')
+install.packages('package masked for review')
 ```
 
 # Matching the GTD events to the news articles
@@ -110,6 +109,7 @@ The first two arguments are the two DTMs that are to be compared, in our case th
 g = compare_documents(sf$query_dtm, sf$ref_dtm, copy_meta=T, 
                       date_var='date', hour_window = c(-4*7*24,7*24), 
                       min_similarity=1, measure = 'dot_product', verbose=T)
+
 ```
 
 The output `g` is a list that contains an edgelist data.table `d` in which each row is a match, with columns indicating the GTD event id, Guardian article id, weight of the match, and the hour difference. It also contains the document meta information and certain additional attributes of the document similarity comparison. This is stored separately for from and to matches, in our case GTD events (`from_meta`) and Guardian articles (`to_meta`).

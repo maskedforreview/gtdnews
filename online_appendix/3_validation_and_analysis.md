@@ -1,6 +1,17 @@
 Third part of online appendix: Validation and Analysis
 ================
 
+  - [Load data](#load-data)
+  - [Validation](#validation)
+      - [Unsupervised validation](#unsupervised-validation)
+      - [Gold standard validation](#gold-standard-validation)
+      - [Comparison of validation
+        methods](#comparison-of-validation-methods)
+  - [Analysis](#analysis)
+      - [Country level variation](#country-level-variation)
+      - [Multilevel regression
+        analysis](#multilevel-regression-analysis)
+
 # Load data
 
 The data for this part can either be created in the second part, or the
@@ -82,9 +93,10 @@ range is specified in the `weight_range` argument, and the `steps`
 argument gives the number of points into which this range is divided.
 Here we use 200 steps, meaning that we get 200 estimations. The
 recall\_precision\_thres determines which of these estimations is used
-for our approximation of \(TP_{recall\approx100}\) (see paper for
-details). Here we say that we use the lowest similarity threshold that
-has an estimated precision of at least 5%.
+for our approximation of \(TP_{recall\approx100}\) (see
+[here](threshold_estimation.pdf) for details). Here we say that we use
+the lowest similarity threshold that has an estimated precision of at
+least 5%.
 
 ``` r
 est_pr = estimate_validity(g, weight_range = c(1,20), steps=200, 
@@ -117,7 +129,8 @@ standard. The `weight_range` and `steps` arguments work in the same way
 as in the `estimate_validity` function.
 
 ``` r
-gold_pr = gtd_pr(g, weight_range = c(1,20), steps = 200)
+gold_pr = gtd_pr(g, weight_range = c(1,20), steps = 200, exclude_added = T)
+max(gold_pr$F1m)
 ```
 
 ## Comparison of validation methods
@@ -147,9 +160,9 @@ top_gold = round(gold_pr$weight[gold_pr$F1m == max(gold_pr$F1m)][1], 2)
 graphics::abline(v=top_gold, lty=2)
 graphics::abline(v=top_est, lty=2, col='darkgrey')
 graphics::text(x=top_gold-0.4, y=19, labels=top_gold, 
-               srt=0, adj=1, font=3, cex=1, family='mono')
+               srt=0, adj=1, font=3, cex=1, family='monospace')
 graphics::text(x=top_est+1.85, y=19, labels=top_est, 
-               srt=0, adj=1, font=3, cex=1, family='mono')
+               srt=0, adj=1, font=3, cex=1, family='monospace')
 
 legend('topright', bty='n', legend = c('weak supervision', 'gold standard'), 
        lty=c(1,1), lwd=c(2,1), col=c('grey', 'black'))
@@ -199,8 +212,7 @@ closest regions.
 e$region = get_region_id(e$lon, e$lat, e$country)
 ```
 
-Now we can aggregate to
-region.
+Now we can aggregate to region.
 
 ``` r
 geo = e[,list(sum_news=sum(N_news),     ## total number of news articles 
@@ -212,8 +224,7 @@ geo = e[,list(sum_news=sum(N_news),     ## total number of news articles
 
 The `plot_worldmap` function wraps the code (mainly using ggplot2) for
 visualizing the worldmap. The input is the region name and a numeric
-score for that
-region.
+score for that region.
 
 ``` r
 plot_worldmap(geo$region, geo$sum_news)   ## most coverage in total. not reported in paper
@@ -260,9 +271,6 @@ m3 = glmer(has_news ~ 1 + log(killed) + suicide + scale(geo_dist) + (1 | country
            data=e2, family = binomial)
 m4 = glmer(has_news ~ 1 + log(killed) + suicide + scale(geo_dist) + value_dist + UN_disagree + (1 | country), 
            data=e2, family = binomial)
-
-anova(m1,m2,m3,m4)
-tab_model(m1,m2,m3,m4, show.se = T)
 ```
 
 ### table 2: all countries
@@ -281,9 +289,18 @@ m2 = glmer(has_news ~ 1 + log(killed) + suicide + (1| country),
            data=e3, family = binomial)
 m3 = glmer(has_news ~ 1 + log(killed) + suicide + scale(geo_dist) + (1 | country), 
            data=e3, family = binomial)
+m30 = glm(has_news ~ 1 + log(killed) + suicide + scale(geo_dist), 
+           data=e3, family = binomial)
 
+m20 = glm(has_news ~ 1 + log(killed) + suicide + country, 
+           data=e3, family = binomial)
+
+gold_matches
+phtest_glmer(m2,m20)
 anova(m1,m2,m3)
-tab_model(m2,m3, show.se=T)
+summary(m2)
+summary(m20)
+tab_model(m2,m20, show.se=T)
 ```
 
 ### figure 7
